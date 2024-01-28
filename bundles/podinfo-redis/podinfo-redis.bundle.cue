@@ -1,4 +1,4 @@
-_namespace: "podinfo"
+#namespace: "podinfo"
 
 bundle: {
     apiVersion: "v1alpha1"
@@ -9,16 +9,17 @@ bundle: {
                 url:     "oci://ghcr.io/stefanprodan/modules/redis"
                 version: "7.2.3"
             }
-            namespace: _namespace
+            namespace: #namespace
             values: maxmemory: 256
         }
         podinfo: {
             module: url:     "oci://ghcr.io/stefanprodan/modules/podinfo"
             module: version: "6.5.4"
-            namespace: _namespace
+            namespace: #namespace
             values: caching: {
                 enabled:  true
-                redisURL: "tcp://redis:6379"
+                // redisURL: "tcp://redis:6379"
+                redisURL: "tcp://\(_ClusterConfig.clusterDomain):6379"
             }
         }
     }

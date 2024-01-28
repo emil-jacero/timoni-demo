@@ -1,5 +1,11 @@
 # Timoni Demo
 
+## Dependencies
+
+- CUE == 0.7.0
+- timoni == 0.19.0
+- go >= 1.20.0
+
 ## Prerequisite
 
 Download go modules.
@@ -39,7 +45,13 @@ Upload modules to the local OCI registry
 ```shell
 timoni mod push ./modules/grafana oci://localhost:5000/modules/grafana \
   --latest=true \
-  --version=1.0.0
+  --version=0.1.0
+timoni mod push ./modules/prometheus oci://localhost:5000/modules/prometheus \
+  --latest=true \
+  --version=0.1.0
+timoni mod push ./modules/loki oci://localhost:5000/modules/loki \
+  --latest=true \
+  --version=0.1.0
 ```
 
 Upload bundles to the local OCI registry
@@ -48,6 +60,10 @@ Upload bundles to the local OCI registry
 timoni artifact push oci://localhost:5000/bundles/podinfo-redis \
   -f ./bundles/podinfo-redis/ \
   --tag=1.0.0
+
+timoni artifact push oci://localhost:5000/bundles/observability-aio \
+  -f ./bundles/observability-aio/ \
+  --tag=0.1.0
 ```
 
 ## Build Example 1
@@ -55,13 +71,13 @@ timoni artifact push oci://localhost:5000/bundles/podinfo-redis \
 List bundles
 
 ```shell
-cd  cluster-cfg/cfg/
+cd  cfg-example1
 cue ls
 ```
 
 Test the build script
 
 ```shell
-cd  cluster-cfg/cfg/
+cd  cfg-example1
 cue build
 ```
