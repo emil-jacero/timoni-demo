@@ -16,70 +16,96 @@ import (
 )
 
 clusters: [...]
-instances: {...}
-for cl in clusters {
-	for k,v in cl.instances {
-		instances: {"\(k)": v}
-	}
-}
+// instances: {...}
+// for cl in clusters {
+// 	for k,v in cl.instances {
+// 		instances: {"\(k)": v}
+// 	}
+// }
 
 // TODO: Output the bundles into folders with uniqe names
 command: build: {
 	outDir: ".output"
-	for k,v in instances {
+	for cl in clusters {
+		for k,v in cl.instances {
 			instDir: path.Join([outDir, "bundles"])
-		"\(k)": {
-			_splitS: strings.Split(_url, "/")
-			_name: _splitS[len(_splitS) - 1]
-			_url: "\(v.source.url)"
-			_tag: "\(v.source.tag)"
-			_yamlFile: path.Join([instDir, "\(_name).resources.yaml"])
-			_bundleFile: path.Join([instDir, "\(_name).bundle.cue"])
+			"\(k)": {
+				_splitS: strings.Split(_url, "/")
+				_name: _splitS[len(_splitS) - 1]
+				_url: "\(v.source.url)"
+				_tag: "\(v.source.tag)"
+				_yamlFile: path.Join([instDir, "\(_name).resources.yaml"])
+				_bundleFile: path.Join([instDir, "\(_name).bundle.cue"])
 
-			print: cli.Print & {
-				text: "Building bundle \(_name) with version \(_tag) to path \(_bundleFile)"
-			}
-			writeBundle: {
-				get: exec.Run & {
-					cmd: [ "timoni", "artifact", "pull", "\(_url):\(_tag)", "-o", "\(instDir)/"]
+				print: cli.Print & {
+					text: "Building bundle \(_name) with version \(_tag) to path \(_bundleFile)"
 				}
-				build: exec.Run & {
-					$dep: get.$done
-					cmd: [ "timoni", "bundle", "build", "-f", _bundleFile, "-f", "config.cue"]
-					stdout: string
-					Out:    stdout
+				writeBundle: {
+					get: exec.Run & {
+						cmd: [ "timoni", "artifact", "pull", "\(_url):\(_tag)", "-o", "\(instDir)/"]
+					}
+					build: exec.Run & {
+						$dep: get.$done
+						cmd: [ "timoni", "bundle", "build", "-f", _bundleFile, "-f", "config.cue"]
+						stdout: string
+						Out:    stdout
+					}
+					write: file.Create & {
+						$dep: build
+						filename: _yamlFile
+						contents: build.Out
+					}
+					// publishArtifact exec.Run & {
+					// 	$dep: build
+					// 	cmd: [ "flux", "push", "artifact", "oci://localhost:5000/flux/:", "", "", "", "", "", ""]
+					// 	stdout: string
+					// 	Out:    stdout
+					// }
 				}
-				// write: exec.Run & {
-				// 	$dep: build
-				// 	stdin: build.stdout
-				// 	cmd: [ "sh", "-c", "/dev/stdin", ">", "\(instDir)/\(_name).resources.yaml"]
-				// }
-				write: file.Create & {
-					$dep: build
-					filename: _yamlFile
-					contents: build.Out
-				}
-				// print: cli.Print & {
-				// 	$dep: build.$done
-				// 	text: build.Out
-				// }
 			}
 		}
 	}
 }
 
-command: ls: {
+// command: ls: {
+// 	task: print: cli.Print & {
+// 		text: tabwriter.Write([
+// 			"CLUSTER \tINSTANCE \tVERSION \tURL",
+// 			for k,v in instances {
+// 				_url: "\(v.source.url)"
+// 				if v.instanceType == "bundle" {
+// 					_url: "\(v.source.url)"
+// 					_splitURL: strings.Split(_url, "/")
+// 					_name: _splitURL[len(_splitURL) - 1]
+// 					_tag: "\(v.source.tag)"
+
+// 					"\t\(_name) \t\(_tag) \t\(_url)"
+// 				}
+// 			}
+// 		])
+// 	}
+// }
+
+command: ls2: {
 	task: print: cli.Print & {
 		text: tabwriter.Write([
-			"INSTANCE \tVERSION \tURL",
-			for k,v in instances {
-				if v.instanceType == "bundle" {
+			"CLUSTER \tINSTANCE \tVERSION \tURL",
+			for cl in clusters {
+				_clName: cl.name
+				_clGroup: cl.group
+				_instances: cl.instances
+				for k,v in _instances {
 					_url: "\(v.source.url)"
-					_tag: "\(v.source.tag)"
+					"\(_clName)-\(_clGroup)"
+					// if v.instanceType == "bundle" {
+					// 	// _url: "\(v.source.url)"
+					// 	// _splitURL: strings.Split(_url, "/")
+					// 	// _name: _splitURL[len(_splitURL) - 1]
+					// 	// _tag: "\(v.source.tag)"
 
-					_splitS: strings.Split(_url, "/")
-					_n: _splitS[len(_splitS) - 1]
-					"\(_n) \t\(_tag) \t\(_url)"
+					// 	// "\t\(_name) \t\(_tag) \t\(_url)"
+					// 	"\(_clName)-\(_clGroup) "
+					// }
 				}
 			}
 		])

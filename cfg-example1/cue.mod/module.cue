@@ -1,1 +1,1 @@
-module: "github.com/emil-jacero/timoni-demo/example1"
+module: "github.com/emil-jacero/timoni-demo/cfg-example1"
