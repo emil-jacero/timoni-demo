@@ -15,14 +15,13 @@ import (
 	timoniextv1 "github.com/emil-jacero/timoni-ext/v1alpha1"
 )
 
-// clusters: [timoniextv1.#Cluster, ...]
 #Clusters: [timoniextv1.#Cluster, ...]
 
 command: build: {
 	outDir: ".output"
 	for cl in #Clusters {
 		for k,v in cl.instances {
-			"\(cl.name)-\(cl.group)-\(k)": { // This is done to make it uniqe :)
+			"\(cl.name)-\(cl.group)-\(k)": { // This is done to make it unique :)
 				clInstDir: path.Join([outDir, "\(cl.name)-\(cl.group)", "bundles"])
 				#splitS: strings.Split(url, "/")
 				name: #splitS[len(#splitS) - 1]
@@ -140,7 +139,7 @@ cl1Staging: timoniextv1.#Cluster & {
 clustersTest: [cl1Devel,cl1Staging]
 
 
-command: ds: {
+command: lstest: {
     task: {
         gather: {
             items: [for cl in clustersTest for k, v in cl.instances {
